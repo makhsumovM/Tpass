@@ -3,6 +3,7 @@
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant light (&:is(.light *));
 
 @theme inline {
   --color-background: var(--background);
@@ -45,6 +46,21 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Tcell custom colors — ссылаются на CSS-переменные, чтобы тема работала в runtime */
+  --color-tcell-bg:           var(--tcell-bg);
+  --color-tcell-card:         var(--tcell-card);
+  --color-tcell-accent:       var(--tcell-accent);
+  --color-tcell-accent-light: var(--tcell-accent-light);
+  --color-tcell-muted:        var(--tcell-muted);
+  --color-tcell-fg:           var(--tcell-fg);
+  --color-tcell-fg2:          var(--tcell-fg2);
+  --color-tcell-fg3:          var(--tcell-fg3);
+  --color-tcell-surface:      var(--tcell-surface);
+  --color-tcell-surface2:     var(--tcell-surface2);
+  /* Фоны колонок трека */
+  --color-tcell-col-free:     var(--tcell-col-free);
+  --color-tcell-col-prem:     var(--tcell-col-prem);
 }
 
 :root {
@@ -66,11 +82,6 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -80,50 +91,95 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Tcell тёмные значения по умолчанию */
+  --tcell-bg:           #0D0D0F;
+  --tcell-card:         #1C1C1E;
+  --tcell-accent:       #7B5EA7;
+  --tcell-accent-light: #9B7FD4;
+  --tcell-muted:        #8E8E93;
+  --tcell-fg:           #FFFFFF;
+  --tcell-fg2:          rgba(255,255,255,0.5);
+  --tcell-fg3:          rgba(255,255,255,0.3);
+  --tcell-surface:      rgba(255,255,255,0.05);
+  --tcell-surface2:     rgba(255,255,255,0.08);
+  --tcell-col-free:     #0A1628;
+  --tcell-col-prem:     #160D24;
+}
+
+.light {
+  --background: #F2F2F7;
+  --foreground: #1C1C1E;
+  --card: #FFFFFF;
+  --card-foreground: #1C1C1E;
+  --border: rgba(0,0,0,0.08);
+
+  --tcell-bg:           #F2F2F7;
+  --tcell-card:         #FFFFFF;
+  --tcell-fg:           #1C1C1E;
+  --tcell-fg2:          rgba(28,28,30,0.6);
+  --tcell-fg3:          rgba(28,28,30,0.4);
+  --tcell-surface:      rgba(0,0,0,0.04);
+  --tcell-surface2:     rgba(0,0,0,0.08);
+  --tcell-col-free:     #DBEAFE;
+  --tcell-col-prem:     #EDE9FE;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: #0D0D0F;
+  --foreground: #FFFFFF;
+  --card: #1C1C1E;
+  --card-foreground: #FFFFFF;
+  --popover: #1C1C1E;
+  --popover-foreground: #FFFFFF;
+  --primary: #7B5EA7;
+  --primary-foreground: #FFFFFF;
+  --secondary: #2C2C2E;
+  --secondary-foreground: #FFFFFF;
+  --muted: #2C2C2E;
+  --muted-foreground: #8E8E93;
+  --accent: #7B5EA7;
+  --accent-foreground: #FFFFFF;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #7B5EA7;
+  --sidebar: #1C1C1E;
+  --sidebar-foreground: #FFFFFF;
+  --sidebar-primary: #7B5EA7;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #2C2C2E;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: #7B5EA7;
+
+  --tcell-bg:           #0D0D0F;
+  --tcell-card:         #1C1C1E;
+  --tcell-fg:           #FFFFFF;
+  --tcell-fg2:          rgba(255,255,255,0.5);
+  --tcell-fg3:          rgba(255,255,255,0.3);
+  --tcell-surface:      rgba(255,255,255,0.05);
+  --tcell-surface2:     rgba(255,255,255,0.08);
+  --tcell-col-free:     #0A1628;
+  --tcell-col-prem:     #160D24;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
   }
   body {
     @apply bg-background text-foreground;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
   }
   html {
     @apply font-sans;
+  }
+  /* Hide scrollbar but keep scroll (WebView UX) */
+  ::-webkit-scrollbar {
+    display: none;
   }
 }
