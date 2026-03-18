@@ -30,13 +30,13 @@ export function RewardCard({ reward, levelRequired }: RewardCardProps) {
       whileTap={isClaimable ? { scale: 0.93 } : {}}
       className={cn(
         'relative flex flex-col items-center gap-2 rounded-2xl p-3 w-full',
-        'border-2 transition-all duration-300 select-none overflow-hidden',
+        'border transition-all duration-300 select-none overflow-hidden',
         // Базовый фон
         isPrem
           ? 'bg-linear-to-b from-[#1f1530] to-[#140e22] border-amber-400/35 light:from-amber-50 light:to-white light:border-amber-200'
           : 'bg-tcell-card border-tcell-surface2 light:border-black/[0.08]',
-        // Базовая тень — всегда есть
-        'shadow-[0_3px_10px_rgba(0,0,0,0.35)] light:shadow-[0_2px_8px_rgba(0,0,0,0.09)]',
+        // Тень только на claimable (ниже), базовая — лёгкая
+        'shadow-sm light:shadow-[0_1px_4px_rgba(0,0,0,0.06)]',
         // Состояния
         status === 'claimable' && isPrem  && 'border-amber-400/80 shadow-[0_0_22px_rgba(251,191,36,0.4)] light:shadow-[0_4px_18px_rgba(251,191,36,0.25)]',
         status === 'claimable' && !isPrem && 'border-tcell-accent/70 shadow-[0_0_18px_rgba(139,111,187,0.35)] light:shadow-[0_4px_18px_rgba(139,111,187,0.2)]',
@@ -46,7 +46,7 @@ export function RewardCard({ reward, levelRequired }: RewardCardProps) {
       )}
     >
       {/* Top shine — CR карточка ощущается как физический предмет */}
-      <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-white/65 to-transparent" />
+      <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-white/30 to-transparent" />
       <div className="absolute top-0 inset-x-0 h-6 bg-linear-to-b from-white/[0.07] to-transparent pointer-events-none" />
 
       {/* Shimmer для claimable premium */}
@@ -123,7 +123,7 @@ export function RewardCard({ reward, levelRequired }: RewardCardProps) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
           className={cn(
-            'w-full rounded-xl py-2 text-xs font-black text-white text-center uppercase tracking-widest',
+            'w-full rounded-xl py-1.5 text-xs font-bold text-white text-center uppercase tracking-wide',
             isPrem
               ? 'bg-linear-to-r from-amber-500 to-amber-400 shadow-[0_3px_12px_rgba(251,191,36,0.5)]'
               : 'bg-linear-to-r from-tcell-accent to-tcell-accent-light shadow-[0_3px_12px_rgba(139,111,187,0.45)]',

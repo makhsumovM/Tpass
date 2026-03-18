@@ -5,34 +5,10 @@ import { cn } from '@/lib/utils'
 import { useTPassStore } from '@/store/tpassStore'
 import type { QuestCategory } from '@/types/tpass'
 
-const TABS: {
-  value: QuestCategory
-  label: string
-  activeGradient: string
-  activeShadow: string
-  dot: string
-}[] = [
-  {
-    value: 'daily',
-    label: 'Ежедневные',
-    activeGradient: 'from-amber-500 to-orange-500',
-    activeShadow:   'shadow-[0_3px_12px_rgba(245,158,11,0.4)]',
-    dot:            'bg-amber-400',
-  },
-  {
-    value: 'weekly',
-    label: 'Недельные',
-    activeGradient: 'from-blue-600 to-blue-500',
-    activeShadow:   'shadow-[0_3px_12px_rgba(59,130,246,0.4)]',
-    dot:            'bg-blue-400',
-  },
-  {
-    value: 'season',
-    label: 'Сезонные',
-    activeGradient: 'from-tcell-accent to-violet-600',
-    activeShadow:   'shadow-[0_3px_12px_rgba(139,111,187,0.4)]',
-    dot:            'bg-violet-400',
-  },
+const TABS: { value: QuestCategory; label: string }[] = [
+  { value: 'daily',  label: 'Ежедневные' },
+  { value: 'weekly', label: 'Недельные' },
+  { value: 'season', label: 'Сезонные' },
 ]
 
 export function QuestTabFilter() {
@@ -40,7 +16,7 @@ export function QuestTabFilter() {
 
   return (
     <div className="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-none">
-      {TABS.map(({ value, label, activeGradient, activeShadow, dot }) => {
+      {TABS.map(({ value, label }) => {
         const active = questCategory === value
         return (
           <motion.button
@@ -48,24 +24,13 @@ export function QuestTabFilter() {
             onClick={() => setQuestCategory(value)}
             whileTap={{ scale: 0.95 }}
             className={cn(
-              'relative shrink-0 px-4 py-2 rounded-full text-xs font-black uppercase tracking-wide transition-all overflow-hidden',
+              'shrink-0 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide transition-all',
               active
-                ? `bg-linear-to-r ${activeGradient} text-white ${activeShadow}`
+                ? 'bg-linear-to-r from-tcell-accent to-tcell-accent-light text-white shadow-[0_3px_12px_rgba(139,111,187,0.35)]'
                 : 'bg-tcell-surface2 text-tcell-muted light:bg-black/[0.06] light:text-gray-500',
             )}
           >
-            {/* Top shine on active */}
-            {active && (
-              <div className="absolute top-0 inset-x-2 h-px bg-white/50 rounded-full" />
-            )}
-
-            <span className="relative flex items-center gap-1.5">
-              {/* Color dot on inactive */}
-              {!active && (
-                <span className={cn('w-1.5 h-1.5 rounded-full', dot)} />
-              )}
-              {label}
-            </span>
+            {label}
           </motion.button>
         )
       })}

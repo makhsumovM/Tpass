@@ -30,7 +30,7 @@ export function StickyHeader() {
       {/* Bottom accent line */}
       <div className="absolute bottom-0 inset-x-0 h-px bg-linear-to-r from-transparent via-tcell-accent/60 to-transparent" />
 
-      <div className="relative px-4 pt-3 pb-4 space-y-3">
+      <div className="relative px-4 pt-2 pb-2.5 space-y-2">
         {/* ── Row 1: Season info ── */}
         <div className="flex items-center justify-between">
           {/* Season name + date range */}
@@ -75,8 +75,8 @@ export function StickyHeader() {
                   {currentLevel}
                 </motion.span>
               </AnimatePresence>
-              <span className="relative text-[7px] font-black text-white/55 uppercase tracking-widest mt-0.5">
-                УР.
+              <span className="relative text-[7px] font-bold text-white/40 uppercase tracking-wide">
+                LV
               </span>
             </div>
             {/* Glow ring */}
@@ -90,10 +90,7 @@ export function StickyHeader() {
           {/* XP bar + numbers */}
           <div className="flex-1 space-y-1.5">
             {/* Numbers row */}
-            <div className="flex items-center justify-between px-0.5">
-              <span className="text-[10px] font-bold text-tcell-muted uppercase tracking-wider">
-                Опыт
-              </span>
+            <div className="flex items-center justify-end px-0.5">
               <span className="text-[11px] font-black text-tcell-fg tabular-nums">
                 {currentXp}
                 <span className="text-tcell-muted font-medium"> / {xpPerLevel} XP</span>
@@ -115,20 +112,16 @@ export function StickyHeader() {
                 animate={{ width: `${pct}%` }}
                 transition={{ duration: 1, ease: 'easeOut', delay: 0.2 }}
               >
-                {/* Top shine on fill */}
-                <div className="absolute top-0 inset-x-0 h-px bg-white/50" />
-                <div className="absolute top-0 inset-x-0 h-2 bg-linear-to-b from-white/15 to-transparent" />
+                {/* Soft gradient on fill */}
+                <div className="absolute top-0 inset-x-0 h-2 bg-linear-to-b from-white/10 to-transparent" />
               </motion.div>
             </div>
           </div>
 
           {/* Next level badge */}
           <div className="shrink-0">
-            <div className="w-10 h-10 rounded-xl bg-tcell-surface border border-tcell-surface2 flex flex-col items-center justify-center light:bg-black/[0.04]">
+            <div className="w-10 h-10 rounded-xl bg-tcell-surface border border-tcell-surface2 flex items-center justify-center light:bg-black/[0.04]">
               <span className="text-sm font-black text-tcell-muted leading-none">{nextLevel}</span>
-              <span className="text-[7px] font-black text-tcell-muted/50 uppercase tracking-widest mt-0.5">
-                НСТ.
-              </span>
             </div>
           </div>
         </div>

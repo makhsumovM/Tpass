@@ -14,21 +14,12 @@ export function BottomActions() {
       <div className="absolute inset-0 bg-tcell-bg/95 backdrop-blur-xl light:border-t light:border-tcell-surface2" />
       <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-tcell-surface2 to-transparent" />
 
-      <div className="relative flex gap-3 px-4 py-3 pb-5">
-        {/* Compare button — ghost */}
+      <div className="relative px-4 py-3 pb-5">
+        {/* Premium CTA — full width */}
         <motion.button
           onClick={openPremiumModal}
           whileTap={{ scale: 0.97 }}
-          className="flex-[0.45] py-3.5 rounded-2xl border border-tcell-surface2 text-sm font-semibold text-tcell-muted transition-colors hover:border-tcell-accent/40 hover:text-tcell-fg2"
-        >
-          Муқоиса
-        </motion.button>
-
-        {/* Premium CTA — primary */}
-        <motion.button
-          onClick={openPremiumModal}
-          whileTap={{ scale: 0.97 }}
-          className="relative flex-1 overflow-hidden rounded-2xl py-3.5 font-black text-sm text-white shadow-lg shadow-amber-500/25"
+          className="relative w-full overflow-hidden rounded-2xl py-3.5 font-black text-sm text-white shadow-lg shadow-amber-500/25"
         >
           <div className="absolute inset-0 bg-linear-to-r from-amber-500 via-orange-400 to-amber-400" />
           <motion.div

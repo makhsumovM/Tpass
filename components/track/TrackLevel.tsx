@@ -79,3 +79,4 @@ export function TrackLevel({ levelData, isCurrent, isPassed }: TrackLevelProps) 
     </div>
   );
 }
+
