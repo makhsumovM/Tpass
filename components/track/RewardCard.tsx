@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { Lock, Check, Crown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTPassStore } from '@/store/tpassStore'
-import { RewardIcon } from './RewardIcon'
+import { RewardIcon, iconBgMap } from './RewardIcon'
 import type { Reward, RewardStatus } from '@/types/tpass'
 
 interface RewardCardProps {
@@ -15,11 +15,13 @@ interface RewardCardProps {
 export function RewardCard({ reward, levelRequired }: RewardCardProps) {
   const { currentLevel, claimedRewards, isPremium, claimReward } = useTPassStore()
 
-  const isLocked    = currentLevel < levelRequired || (reward.track === 'premium' && !isPremium)
-  const isClaimed   = claimedRewards.includes(reward.id)
-  const isClaimable = !isLocked && !isClaimed
+  const isPrem          = reward.track === 'premium'
+  const isLevelLocked   = currentLevel < levelRequired
+  const isPremiumLocked = isPrem && !isPremium
+  const isLocked        = isLevelLocked || isPremiumLocked
+  const isClaimed       = claimedRewards.includes(reward.id)
+  const isClaimable     = !isLocked && !isClaimed
   const status: RewardStatus = isClaimed ? 'claimed' : isLocked ? 'locked' : 'claimable'
-  const isPrem = reward.track === 'premium'
 
   return (
     <motion.button
@@ -27,64 +29,75 @@ export function RewardCard({ reward, levelRequired }: RewardCardProps) {
       onClick={() => isClaimable && claimReward(reward.id)}
       whileTap={isClaimable ? { scale: 0.93 } : {}}
       className={cn(
-        'relative flex flex-col items-center gap-1.5 rounded-2xl p-2.5 w-full max-w-32.5',
+        'relative flex flex-col items-center gap-2 rounded-2xl p-3 w-full',
         'border-2 transition-all duration-300 select-none overflow-hidden',
         // Базовый фон
         isPrem
-          ? 'bg-linear-to-b from-yellow-400/10 via-amber-300/5 to-transparent border-yellow-400/30'
-          : 'bg-tcell-card border-tcell-surface2',
+          ? 'bg-linear-to-b from-[#1f1530] to-[#140e22] border-amber-400/35 light:from-amber-50 light:to-white light:border-amber-200'
+          : 'bg-tcell-card border-tcell-surface2 light:border-black/[0.08]',
+        // Базовая тень — всегда есть
+        'shadow-[0_3px_10px_rgba(0,0,0,0.35)] light:shadow-[0_2px_8px_rgba(0,0,0,0.09)]',
         // Состояния
-        status === 'claimable' && isPrem  && 'border-yellow-400/70 shadow-[0_0_18px_rgba(251,191,36,0.3)]',
-        status === 'claimable' && !isPrem && 'border-tcell-accent/60 shadow-[0_0_14px_rgba(123,94,167,0.25)]',
-        status === 'claimed'   && 'opacity-40',
-        status === 'locked'    && 'opacity-35 cursor-default',
+        status === 'claimable' && isPrem  && 'border-amber-400/80 shadow-[0_0_22px_rgba(251,191,36,0.4)] light:shadow-[0_4px_18px_rgba(251,191,36,0.25)]',
+        status === 'claimable' && !isPrem && 'border-tcell-accent/70 shadow-[0_0_18px_rgba(139,111,187,0.35)] light:shadow-[0_4px_18px_rgba(139,111,187,0.2)]',
+        status === 'claimed'   && 'opacity-50 saturate-50',
+        isPremiumLocked        && 'opacity-60 cursor-default',
+        isLevelLocked          && 'cursor-default',
       )}
     >
-      {/* Золотой shimmer для claimable premium */}
+      {/* Top shine — CR карточка ощущается как физический предмет */}
+      <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-white/65 to-transparent" />
+      <div className="absolute top-0 inset-x-0 h-6 bg-linear-to-b from-white/[0.07] to-transparent pointer-events-none" />
+
+      {/* Shimmer для claimable premium */}
       {status === 'claimable' && isPrem && (
         <motion.div
-          className="absolute inset-0 bg-linear-to-r from-transparent via-yellow-200/20 to-transparent -skew-x-12"
+          className="absolute inset-0 bg-linear-to-r from-transparent via-amber-200/15 to-transparent -skew-x-12"
           animate={{ x: ['-130%', '230%'] }}
-          transition={{ duration: 2.2, repeat: Infinity, repeatDelay: 1.8 }}
+          transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 2 }}
         />
       )}
 
-      {/* Корона для премиума */}
+      {/* Crown badge для premium */}
       {isPrem && (
-        <div className="absolute top-1.5 right-1.5 flex items-center justify-center w-4 h-4 rounded-full bg-yellow-400/20 border border-yellow-400/50">
-          <Crown size={8} className="text-yellow-400" />
+        <div className="absolute top-1.5 right-1.5 flex items-center justify-center w-4 h-4 rounded-full bg-amber-400/20 border border-amber-400/50">
+          <Crown size={8} className="text-amber-400" />
         </div>
       )}
 
-      {/* Иконка */}
+      {/* Иконка — тип-специфичный фон */}
       <div className={cn(
-        'w-11 h-11 rounded-xl flex items-center justify-center shrink-0',
-        isPrem
-          ? 'bg-yellow-400/15 ring-1 ring-yellow-400/20'
-          : status === 'claimed'
-          ? 'bg-green-500/15'
-          : 'bg-tcell-surface2',
+        'w-12 h-12 rounded-2xl flex items-center justify-center shrink-0',
+        status === 'claimed'
+          ? 'bg-green-500/20 ring-1 ring-green-500/30'
+          : isPremiumLocked
+          ? 'bg-white/8 ring-1 ring-white/10'
+          : isPrem
+          ? 'bg-amber-400/15 ring-1 ring-amber-400/30 light:bg-amber-100'
+          : iconBgMap[reward.type],
       )}>
         <AnimatePresence mode="wait">
           {status === 'claimed' ? (
-            <motion.div key="check"
+            <motion.div
+              key="check"
               initial={{ scale: 0, rotate: -20 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ type: 'spring', stiffness: 500, damping: 20 }}
             >
-              <Check size={20} className="text-green-400" strokeWidth={2.5} />
+              <Check size={22} className="text-green-400" strokeWidth={2.5} />
             </motion.div>
-          ) : status === 'locked' ? (
+          ) : isPremiumLocked ? (
             <motion.div key="lock">
-              <Lock size={15} className="text-tcell-muted" />
+              <Lock size={16} className="text-tcell-muted" />
             </motion.div>
           ) : (
-            <motion.div key="icon"
+            <motion.div
+              key="icon"
               initial={{ scale: 0.6 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', stiffness: 320 }}
             >
-              <RewardIcon type={reward.type} size={20} isPrem={isPrem} />
+              <RewardIcon type={reward.type} size={22} isPrem={isPrem} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -93,8 +106,8 @@ export function RewardCard({ reward, levelRequired }: RewardCardProps) {
       {/* Текст */}
       <div className="text-center leading-tight w-full">
         <p className={cn(
-          'text-xs font-bold truncate',
-          isPrem ? 'text-yellow-500' : 'text-tcell-fg',
+          'text-xs font-black truncate',
+          isPrem ? 'text-amber-400' : 'text-tcell-fg',
         )}>
           {reward.label}
         </p>
@@ -103,17 +116,17 @@ export function RewardCard({ reward, levelRequired }: RewardCardProps) {
         </p>
       </div>
 
-      {/* Кнопка "Забрать" */}
+      {/* Кнопка "Забрать" — CR-стиль: большая, яркая, chunky */}
       {status === 'claimable' && (
         <motion.div
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.2 }}
           className={cn(
-            'w-full rounded-lg py-1 text-[9px] font-black text-white text-center uppercase tracking-wider',
+            'w-full rounded-xl py-2 text-xs font-black text-white text-center uppercase tracking-widest',
             isPrem
-              ? 'bg-linear-to-r from-yellow-400 to-amber-400 shadow-[0_2px_8px_rgba(251,191,36,0.4)]'
-              : 'bg-tcell-accent shadow-[0_2px_8px_rgba(123,94,167,0.35)]',
+              ? 'bg-linear-to-r from-amber-500 to-amber-400 shadow-[0_3px_12px_rgba(251,191,36,0.5)]'
+              : 'bg-linear-to-r from-tcell-accent to-tcell-accent-light shadow-[0_3px_12px_rgba(139,111,187,0.45)]',
           )}
         >
           Забрать

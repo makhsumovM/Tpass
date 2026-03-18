@@ -21,24 +21,27 @@ export function PremiumModal() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={closePremiumModal}
-            className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
+            className="fixed inset-0 z-[100] bg-black/80"
           />
 
           {/* Sheet */}
           <motion.div
             key="sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Tcell Premium Pass"
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 350, damping: 35 }}
-            className="fixed bottom-0 inset-x-0 z-50 mx-auto max-w-[430px] overflow-hidden rounded-t-3xl"
+            className="fixed bottom-0 inset-x-0 z-[101] mx-auto max-w-[430px] overflow-hidden rounded-t-3xl"
           >
             {/* Background */}
             <div className="absolute inset-0 bg-[#110820]" />
             <div className="absolute inset-0 bg-linear-to-b from-[#2A1550]/80 via-[#110820] to-[#110820]" />
 
             {/* Top gold accent line */}
-            <div className="absolute top-0 inset-x-0 h-0.5 bg-linear-to-r from-transparent via-yellow-400/60 to-transparent" />
+            <div className="absolute top-0 inset-x-0 h-0.5 bg-linear-to-r from-transparent via-amber-400/60 to-transparent" />
 
             <div className="relative p-5">
               {/* Drag handle */}
@@ -47,6 +50,7 @@ export function PremiumModal() {
               {/* Close */}
               <button
                 onClick={closePremiumModal}
+                aria-label="Закрыть"
                 className="absolute top-5 right-5 w-8 h-8 rounded-full bg-white/8 flex items-center justify-center"
               >
                 <X size={15} className="text-white/60" />
@@ -54,8 +58,8 @@ export function PremiumModal() {
 
               {/* Header */}
               <div className="flex items-center gap-3 mb-5">
-                <div className="w-11 h-11 rounded-2xl flex items-center justify-center bg-linear-to-br from-yellow-400/30 to-tcell-accent/30 border border-yellow-400/25">
-                  <Zap size={20} className="text-yellow-400" />
+                <div className="w-11 h-11 rounded-2xl flex items-center justify-center bg-linear-to-br from-amber-400/30 to-tcell-accent/30 border border-amber-400/25">
+                  <Zap size={20} className="text-amber-400" />
                 </div>
                 <div>
                   <p className="text-base font-black text-white">Tcell Premium Pass</p>
@@ -77,20 +81,20 @@ export function PremiumModal() {
                 </div>
 
                 {/* Premium */}
-                <div className="relative rounded-2xl border border-yellow-400/30 bg-yellow-400/5 p-3 space-y-2 overflow-hidden">
+                <div className="relative rounded-2xl border border-amber-400/30 bg-amber-400/5 p-3 space-y-2 overflow-hidden">
                   {/* Gold shimmer */}
                   <motion.div
-                    className="absolute inset-0 bg-linear-to-r from-transparent via-yellow-400/8 to-transparent -skew-x-12"
+                    className="absolute inset-0 bg-linear-to-r from-transparent via-amber-400/8 to-transparent -skew-x-12"
                     animate={{ x: ['-100%', '200%'] }}
                     transition={{ duration: 2.5, repeat: Infinity, repeatDelay: 1.5 }}
                   />
                   <div className="relative flex items-center gap-1.5 mb-0.5">
-                    <Zap size={9} className="text-yellow-400" />
-                    <p className="text-[10px] font-black text-yellow-400 uppercase tracking-widest">Premium</p>
+                    <Zap size={9} className="text-amber-400" />
+                    <p className="text-[10px] font-black text-amber-400 uppercase tracking-widest">Premium</p>
                   </div>
                   {PREM_PERKS.map((p) => (
                     <div key={p} className="relative flex items-start gap-2">
-                      <Star size={11} fill="currentColor" className="text-yellow-400 mt-0.5 shrink-0" />
+                      <Star size={11} fill="currentColor" className="text-amber-400 mt-0.5 shrink-0" />
                       <span className="text-[11px] text-white/90 leading-tight font-medium">{p}</span>
                     </div>
                   ))}
@@ -113,7 +117,7 @@ export function PremiumModal() {
                 whileTap={{ scale: 0.97 }}
                 className="relative w-full overflow-hidden rounded-2xl py-4 font-black text-sm tracking-wide text-white shadow-xl"
               >
-                <div className="absolute inset-0 bg-linear-to-r from-tcell-accent via-[#9B4FD4] to-yellow-500" />
+                <div className="absolute inset-0 bg-linear-to-r from-tcell-accent via-[#9B4FD4] to-amber-500" />
                 <motion.div
                   className="absolute inset-0 bg-linear-to-r from-transparent via-white/20 to-transparent -skew-x-12"
                   animate={{ x: ['-100%', '200%'] }}

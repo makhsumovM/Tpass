@@ -15,18 +15,22 @@ export function BottomActions() {
       <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-tcell-surface2 to-transparent" />
 
       <div className="relative flex gap-3 px-4 py-3 pb-5">
-        {/* Compare button */}
-        <button className="flex-[0.55] py-3.5 rounded-2xl bg-tcell-surface2 border border-tcell-surface2 text-sm font-semibold text-tcell-fg2 light:bg-gray-100 light:border-gray-200 light:text-gray-600">
-          Муқоиса
-        </button>
-
-        {/* Premium CTA */}
+        {/* Compare button — ghost */}
         <motion.button
           onClick={openPremiumModal}
           whileTap={{ scale: 0.97 }}
-          className="relative flex-1 overflow-hidden rounded-2xl py-3.5 font-black text-sm text-white shadow-lg shadow-yellow-500/20"
+          className="flex-[0.45] py-3.5 rounded-2xl border border-tcell-surface2 text-sm font-semibold text-tcell-muted transition-colors hover:border-tcell-accent/40 hover:text-tcell-fg2"
         >
-          <div className="absolute inset-0 bg-linear-to-r from-yellow-500 via-orange-400 to-yellow-400" />
+          Муқоиса
+        </motion.button>
+
+        {/* Premium CTA — primary */}
+        <motion.button
+          onClick={openPremiumModal}
+          whileTap={{ scale: 0.97 }}
+          className="relative flex-1 overflow-hidden rounded-2xl py-3.5 font-black text-sm text-white shadow-lg shadow-amber-500/25"
+        >
+          <div className="absolute inset-0 bg-linear-to-r from-amber-500 via-orange-400 to-amber-400" />
           <motion.div
             className="absolute inset-0 bg-linear-to-r from-transparent via-white/25 to-transparent -skew-x-12"
             animate={{ x: ['-100%', '200%'] }}

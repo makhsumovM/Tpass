@@ -20,9 +20,11 @@ export default function TPassLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="flex flex-col min-h-screen bg-tcell-bg">
-      {/* Sticky top: XP header + tabs */}
-      <StickyHeader />
-      <TabBar />
+      {/* Sticky top: XP header + tabs — единый блок, одно sticky */}
+      <div className="sticky top-0 z-50 bg-tcell-bg">
+        <StickyHeader />
+        <TabBar />
+      </div>
 
       {/* Scrollable content */}
       <main className="flex-1 overflow-y-auto">
