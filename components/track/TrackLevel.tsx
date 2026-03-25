@@ -75,7 +75,7 @@ export function TrackLevel({ levelData, isCurrent, isPassed }: TrackLevelProps) 
       </div>
 
       {/* Row divider */}
-      <div className="absolute inset-x-0 bottom-0 h-px bg-tcell-surface2 light:bg-black/[0.05]" />
+      <div className="absolute inset-x-0 bottom-0 h-px bg-tcell-surface2 light:bg-black/5" />
     </div>
   );
 }
