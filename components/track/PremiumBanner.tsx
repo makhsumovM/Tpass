@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'motion/react'
-import { Check, Zap } from 'lucide-react'
+import { Check, Crown, Zap } from 'lucide-react'
 import { useTPassStore } from '@/store/tpassStore'
 
 const PERKS = [
