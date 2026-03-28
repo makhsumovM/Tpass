@@ -40,30 +40,22 @@ export function TrackLevel({ levelData, isCurrent, isPassed }: TrackLevelProps) 
 
         <div
           className={cn(
-            'relative flex items-center justify-center font-black transition-all duration-300 select-none rounded-full',
+            'relative flex items-center justify-center font-bold transition-all duration-200 select-none rounded-full',
             isCurrent
-              ? 'w-11 h-11 text-sm bg-linear-to-br from-tcell-accent-light to-tcell-accent text-white scale-110 shadow-[0_0_22px_rgba(139,111,187,0.7),0_0_8px_rgba(169,143,224,0.5)]'
+              ? 'w-10 h-10 text-sm bg-tcell-accent text-white'
               : isPassed
-              ? 'w-9 h-9 text-xs bg-tcell-accent/20 text-tcell-accent-light ring-1 ring-tcell-accent/50'
-              : 'w-8 h-8 text-[11px] bg-tcell-surface2 text-tcell-muted ring-1 ring-tcell-surface2 light:ring-black/10 light:text-gray-400',
+              ? 'w-9 h-9 text-xs bg-tcell-accent/15 text-tcell-accent-light'
+              : 'w-8 h-8 text-[11px] bg-tcell-surface2 text-tcell-muted',
           )}
         >
           {level}
 
-          {/* Пульсирующее кольцо текущего уровня */}
           {isCurrent && (
-            <>
-              <motion.div
-                className="absolute inset-0 rounded-full ring-2 ring-tcell-accent-light/50"
-                animate={{ scale: [1, 1.7, 1], opacity: [0.6, 0, 0.6] }}
-                transition={{ duration: 2.4, repeat: Infinity, ease: 'easeOut' }}
-              />
-              <motion.div
-                className="absolute inset-0 rounded-full ring-1 ring-tcell-accent/30"
-                animate={{ scale: [1, 2.2, 1], opacity: [0.3, 0, 0.3] }}
-                transition={{ duration: 2.4, repeat: Infinity, ease: 'easeOut', delay: 0.4 }}
-              />
-            </>
+            <motion.div
+              className="absolute inset-0 rounded-full ring-1 ring-tcell-accent-light/40"
+              animate={{ scale: [1, 1.6, 1], opacity: [0.5, 0, 0.5] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeOut' }}
+            />
           )}
 
         </div>

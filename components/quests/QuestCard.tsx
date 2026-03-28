@@ -32,24 +32,18 @@ export function QuestCard({ quest }: QuestCardProps) {
       animate={{ opacity: isLocked ? 0.55 : 1, y: 0 }}
       transition={{ duration: 0.2 }}
       className={cn(
-        'relative rounded-2xl overflow-hidden border-2 transition-all duration-300',
-        // Тени как у RewardCard
-        'shadow-[0_3px_10px_rgba(0,0,0,0.25)] light:shadow-[0_2px_8px_rgba(0,0,0,0.08)]',
+        'relative rounded-2xl overflow-hidden border transition-all duration-200',
         isCompleted
-          ? 'bg-green-500/6 border-green-500/25 light:bg-green-50 light:border-green-200'
+          ? 'bg-tcell-card border-green-500/20'
           : isPrem
-          ? 'bg-linear-to-b from-[#1f1530] to-[#140e22] border-amber-400/30 light:from-amber-50 light:to-white light:border-amber-200'
-          : 'bg-tcell-card border-tcell-surface2 light:border-black/[0.08]',
+          ? 'bg-tcell-card border-amber-400/25'
+          : 'bg-tcell-card border-tcell-surface2',
       )}
     >
-      {/* Top shine */}
-      <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-white/60 to-transparent" />
-      <div className="absolute top-0 inset-x-0 h-6 bg-linear-to-b from-white/[0.06] to-transparent pointer-events-none" />
-
       {/* Left accent bar */}
       <div className={cn(
-        'absolute left-0 top-3 bottom-3 w-0.5 rounded-r-full',
-        isCompleted ? 'bg-green-400' : isPrem ? 'bg-amber-400' : 'bg-tcell-accent',
+        'absolute left-0 top-4 bottom-4 w-0.5 rounded-r-full',
+        isCompleted ? 'bg-green-400/60' : isPrem ? 'bg-amber-400/60' : 'bg-tcell-accent/60',
       )} />
 
       <div className="px-4 py-3.5 pl-5">
@@ -141,7 +135,7 @@ export function QuestCard({ quest }: QuestCardProps) {
               className="inline-flex items-center gap-1.5 bg-green-500/12 border border-green-500/25 rounded-full px-2.5 py-0.5"
             >
               <CheckCircle2 size={11} className="text-green-400" strokeWidth={2.5} />
-              <span className="text-[11px] font-black text-green-400 uppercase tracking-wide">Выполнено</span>
+              <span className="text-[11px] font-semibold text-green-400">Выполнено</span>
             </motion.div>
           ) : (
             <div className="flex items-center gap-2.5">
@@ -172,8 +166,7 @@ export function QuestCard({ quest }: QuestCardProps) {
                 whileHover={{ scale: 1.12 }}
                 className={cn(
                   'shrink-0 w-7 h-7 rounded-full flex items-center justify-center border-2 transition-colors',
-                  'shadow-[0_2px_6px_rgba(0,0,0,0.2)]',
-                  isPrem
+                          isPrem
                     ? 'bg-amber-400/15 border-amber-400/40 text-amber-400 hover:bg-amber-400/25'
                     : 'bg-tcell-accent/15 border-tcell-accent/40 text-tcell-accent-light hover:bg-tcell-accent/25',
                 )}

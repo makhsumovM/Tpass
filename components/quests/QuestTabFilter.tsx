@@ -24,10 +24,10 @@ export function QuestTabFilter() {
             onClick={() => setQuestCategory(value)}
             whileTap={{ scale: 0.95 }}
             className={cn(
-              'shrink-0 px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wide transition-all',
+              'shrink-0 px-4 py-2 rounded-full text-xs font-semibold transition-colors',
               active
-                ? 'bg-linear-to-r from-tcell-accent to-tcell-accent-light text-white shadow-[0_3px_12px_rgba(139,111,187,0.35)]'
-                : 'bg-tcell-surface2 text-tcell-muted light:bg-black/[0.06] light:text-gray-500',
+                ? 'bg-tcell-accent/20 text-tcell-accent-light border border-tcell-accent/30'
+                : 'bg-tcell-surface2 text-tcell-muted border border-transparent',
             )}
           >
             {label}

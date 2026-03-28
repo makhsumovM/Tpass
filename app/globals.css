@@ -181,6 +181,10 @@
     @apply bg-background text-foreground;
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
+    /* Monkeytype-style: smooth rendering */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
   html {
     @apply font-sans;
@@ -188,5 +192,9 @@
   /* Hide scrollbar but keep scroll (WebView UX) */
   ::-webkit-scrollbar {
     display: none;
+  }
+  /* Consistent letter spacing for body text */
+  p, span, div {
+    letter-spacing: -0.01em;
   }
 }

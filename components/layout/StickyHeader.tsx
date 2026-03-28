@@ -21,37 +21,30 @@ export function StickyHeader() {
 
   return (
     <div className="relative overflow-hidden">
-      {/* Layered background */}
       <div className="absolute inset-0 bg-tcell-bg" />
-      <div className="absolute inset-0 bg-linear-to-b from-tcell-accent/14 via-tcell-accent/4 to-transparent" />
-
-      {/* Top shine */}
-      <div className="absolute top-0 inset-x-0 h-px bg-linear-to-r from-transparent via-white/20 to-transparent" />
-      {/* Bottom accent line */}
-      <div className="absolute bottom-0 inset-x-0 h-px bg-linear-to-r from-transparent via-tcell-accent/60 to-transparent" />
+      <div className="absolute bottom-0 inset-x-0 h-px bg-tcell-surface2" />
 
       <div className="relative px-4 pt-2 pb-2.5 space-y-2">
         {/* ── Row 1: Season info ── */}
         <div className="flex items-center justify-between">
-          {/* Season name + date range */}
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-sm font-black text-tcell-fg tracking-wide truncate">
+            <span className="text-sm font-bold text-tcell-fg truncate">
               {seasonName}
             </span>
-            <span className="shrink-0 text-[10px] font-medium text-tcell-fg3 bg-tcell-surface rounded-full px-2 py-0.5 border border-tcell-surface2">
+            <span className="shrink-0 text-[11px] text-tcell-fg3 tabular-nums">
               Март — Апрель
             </span>
           </div>
 
           {/* Timer + theme toggle */}
           <div className="flex items-center gap-2 shrink-0 ml-2">
-            <div className="flex items-center gap-1.5 bg-tcell-surface border border-tcell-surface2 rounded-full px-2.5 py-1">
-              <Timer size={10} className="text-tcell-accent-light" />
-              <span className="text-[11px] font-bold text-tcell-fg2 tabular-nums">{countdown}</span>
+            <div className="flex items-center gap-1 text-tcell-muted">
+              <Timer size={10} />
+              <span className="text-[11px] tabular-nums">{countdown}</span>
             </div>
             <button
               onClick={toggleTheme}
-              className="w-7 h-7 rounded-full bg-tcell-surface border border-tcell-surface2 flex items-center justify-center text-tcell-muted hover:text-tcell-accent-light transition-colors"
+              className="w-7 h-7 rounded-full bg-tcell-surface border border-tcell-surface2 flex items-center justify-center text-tcell-muted transition-colors"
             >
               {theme === 'dark' ? <Sun size={12} /> : <Moon size={12} />}
             </button>
@@ -61,68 +54,46 @@ export function StickyHeader() {
         {/* ── Row 2: Level + XP bar + Next level ── */}
         <div className="flex items-center gap-3">
           {/* Current level badge */}
-          <div className="relative shrink-0">
-            <div className="w-13 h-13 rounded-2xl bg-linear-to-br from-tcell-accent-light via-tcell-accent to-[#4A2080] flex flex-col items-center justify-center shadow-[0_4px_16px_rgba(139,111,187,0.45)] border border-tcell-accent-light/30 overflow-hidden">
+          <div className="shrink-0">
+            <div className="w-11 h-11 rounded-2xl bg-tcell-accent flex items-center justify-center border border-tcell-accent-light/20 overflow-hidden">
               <AnimatePresence mode="popLayout">
                 <motion.span
                   key={currentLevel}
-                  initial={{ y: 16, opacity: 0, scale: 0.7 }}
-                  animate={{ y: 0, opacity: 1, scale: 1 }}
-                  exit={{ y: -16, opacity: 0, scale: 0.7 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 22 }}
-                  className="relative text-lg font-black text-white leading-none select-none"
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -10, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: 'easeOut' }}
+                  className="text-base font-black text-white leading-none select-none"
                 >
                   {currentLevel}
                 </motion.span>
               </AnimatePresence>
-              <span className="relative text-[7px] font-bold text-white/40 uppercase tracking-wide">
-                LV
-              </span>
             </div>
-            {/* Glow ring */}
-            <motion.div
-              className="absolute inset-0 rounded-2xl border border-tcell-accent-light/35"
-              animate={{ opacity: [0.3, 0.9, 0.3] }}
-              transition={{ duration: 2.5, repeat: Infinity }}
-            />
           </div>
 
           {/* XP bar + numbers */}
           <div className="flex-1 space-y-1.5">
-            {/* Numbers row */}
-            <div className="flex items-center justify-end px-0.5">
-              <span className="text-[11px] font-black text-tcell-fg tabular-nums">
-                {currentXp}
-                <span className="text-tcell-muted font-medium"> / {xpPerLevel} XP</span>
+            <div className="flex items-center justify-between px-0.5">
+              <span className="text-[11px] text-tcell-muted">Уровень {currentLevel}</span>
+              <span className="text-[11px] text-tcell-fg2 tabular-nums">
+                {currentXp} / {xpPerLevel} XP
               </span>
             </div>
 
             {/* Bar */}
-            <div className="relative h-4 bg-tcell-surface2 rounded-full overflow-hidden light:bg-black/[0.08]">
-              {/* Top shine on bar track */}
-              <div className="absolute top-0 inset-x-0 h-px bg-white/12 z-10" />
-
-              {/* Fill */}
+            <div className="h-1.5 bg-tcell-surface2 rounded-full overflow-hidden">
               <motion.div
-                className="h-full rounded-full relative overflow-hidden"
-                style={{
-                  background: 'linear-gradient(90deg, #8B6FBB 0%, #A98FE0 60%, #C4A8F0 100%)',
-                }}
+                className="h-full rounded-full bg-tcell-accent"
                 initial={{ width: 0 }}
                 animate={{ width: `${pct}%` }}
-                transition={{ duration: 1, ease: 'easeOut', delay: 0.2 }}
-              >
-                {/* Soft gradient on fill */}
-                <div className="absolute top-0 inset-x-0 h-2 bg-linear-to-b from-white/10 to-transparent" />
-              </motion.div>
+                transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
+              />
             </div>
           </div>
 
-          {/* Next level badge */}
-          <div className="shrink-0">
-            <div className="w-10 h-10 rounded-xl bg-tcell-surface border border-tcell-surface2 flex items-center justify-center light:bg-black/[0.04]">
-              <span className="text-sm font-black text-tcell-muted leading-none">{nextLevel}</span>
-            </div>
+          {/* Next level */}
+          <div className="shrink-0 w-9 h-9 rounded-xl bg-tcell-surface border border-tcell-surface2 flex items-center justify-center">
+            <span className="text-sm font-bold text-tcell-muted leading-none">{nextLevel}</span>
           </div>
         </div>
       </div>
