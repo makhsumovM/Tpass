@@ -38,6 +38,9 @@ interface TPassState {
   // Theme
   theme: 'light' | 'dark'
 
+  // Onboarding
+  onboarded: boolean
+
   // UI state (not persisted)
   premiumModalOpen: boolean
   xpToast: XpToast | null
@@ -52,6 +55,8 @@ interface TPassState {
   closePremiumModal: () => void
   clearXpToast: () => void
   toggleTheme: () => void
+  completeOnboarding: () => void
+  resetProgress: () => void
 }
 
 export const useTPassStore = create<TPassState>()(
@@ -60,31 +65,21 @@ export const useTPassStore = create<TPassState>()(
       seasonName: '🌸 Наврўз 2026',
       seasonEndDate: '2026-04-30T23:59:59.000Z',
 
-      currentLevel: 5,
-      currentXp: 45,
+      currentLevel: 1,
+      currentXp: 0,
       xpPerLevel: XP_PER_LEVEL,
       isPremium: false,
 
+      onboarded: false,
+
       theme: 'light' as const,
 
-      claimedRewards: ['r-1-free', 'r-1-prem', 'r-2-free', 'r-2-prem', 'r-3-free', 'r-4-free'],
+      claimedRewards: [],
       levels: LEVELS,
 
       questCategory: 'daily',
       quests: QUESTS,
-      questProgress: {
-        'q-daily-1': 0,
-        'q-daily-2': 0,
-        'q-weekly-1': 1,
-        'q-weekly-2': 0,
-        'q-weekly-3': 0,
-        'q-weekly-4': 0,
-        'q-season-1': 5,
-        'q-season-2': 20,
-        'q-season-3': 5,
-        'q-season-4': 20,
-        'q-season-5': 0,
-      },
+      questProgress: Object.fromEntries(QUESTS.map((q) => [q.id, 0])),
 
       premiumModalOpen: false,
       xpToast: null,
@@ -144,6 +139,18 @@ export const useTPassStore = create<TPassState>()(
       closePremiumModal: () => set({ premiumModalOpen: false }),
       clearXpToast: () => set({ xpToast: null }),
       toggleTheme: () => set((s) => ({ theme: s.theme === 'dark' ? 'light' : 'dark' })),
+      completeOnboarding: () => set({ onboarded: true }),
+      resetProgress: () =>
+        set({
+          currentLevel: 1,
+          currentXp: 0,
+          isPremium: false,
+          onboarded: false,
+          claimedRewards: [],
+          questProgress: Object.fromEntries(QUESTS.map((q) => [q.id, 0])),
+          questCategory: 'daily',
+          xpToast: null,
+        }),
     }),
     {
       name: 'tpass-storage',
@@ -151,6 +158,7 @@ export const useTPassStore = create<TPassState>()(
         currentLevel: state.currentLevel,
         currentXp: state.currentXp,
         isPremium: state.isPremium,
+        onboarded: state.onboarded,
         claimedRewards: state.claimedRewards,
         questProgress: state.questProgress,
         questCategory: state.questCategory,

@@ -1,11 +1,24 @@
 'use client'
 
+import { useState } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
 import { Lock, Check, Crown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTPassStore } from '@/store/tpassStore'
 import { RewardIcon, iconBgMap } from './RewardIcon'
 import type { Reward, RewardStatus } from '@/types/tpass'
+
+// 8 particles at different angles
+const PARTICLES = [
+  { angle: 0,   color: '#FBBF24' },
+  { angle: 45,  color: '#A98FE0' },
+  { angle: 90,  color: '#34D399' },
+  { angle: 135, color: '#FBBF24' },
+  { angle: 180, color: '#8B6FBB' },
+  { angle: 225, color: '#34D399' },
+  { angle: 270, color: '#FBBF24' },
+  { angle: 315, color: '#A98FE0' },
+]
 
 interface RewardCardProps {
   reward: Reward
@@ -14,6 +27,7 @@ interface RewardCardProps {
 
 export function RewardCard({ reward, levelRequired }: RewardCardProps) {
   const { currentLevel, claimedRewards, isPremium, claimReward } = useTPassStore()
+  const [burst, setBurst] = useState(false)
 
   const isPrem          = reward.track === 'premium'
   const isLevelLocked   = currentLevel < levelRequired
@@ -23,14 +37,23 @@ export function RewardCard({ reward, levelRequired }: RewardCardProps) {
   const isClaimable     = !isLocked && !isClaimed
   const status: RewardStatus = isClaimed ? 'claimed' : isLocked ? 'locked' : 'claimable'
 
+  function handleClaim() {
+    if (!isClaimable) return
+    claimReward(reward.id)
+    setBurst(true)
+    setTimeout(() => setBurst(false), 700)
+  }
+
   return (
     <motion.button
       disabled={!isClaimable}
-      onClick={() => isClaimable && claimReward(reward.id)}
+      onClick={handleClaim}
       whileTap={isClaimable ? { scale: 0.95 } : {}}
       className={cn(
         'relative flex flex-col items-center gap-2 rounded-2xl p-3 w-full',
-        'border transition-all duration-200 select-none overflow-hidden',
+        'border transition-all duration-200 select-none',
+        // overflow-visible during burst so particles escape the card
+        burst ? 'overflow-visible' : 'overflow-hidden',
         isPrem
           ? 'bg-tcell-card border-amber-400/25 light:border-amber-200'
           : 'bg-tcell-card border-tcell-surface2 light:border-black/[0.08]',
@@ -41,6 +64,48 @@ export function RewardCard({ reward, levelRequired }: RewardCardProps) {
         isLevelLocked          && 'cursor-default',
       )}
     >
+      {/* Sparkle burst particles */}
+      <AnimatePresence>
+        {burst && PARTICLES.map((p, i) => {
+          const rad = (p.angle * Math.PI) / 180
+          const tx = Math.cos(rad) * 38
+          const ty = Math.sin(rad) * 38
+          return (
+            <motion.span
+              key={i}
+              className="absolute rounded-full pointer-events-none z-10"
+              style={{
+                width: 6,
+                height: 6,
+                backgroundColor: p.color,
+                top: '50%',
+                left: '50%',
+                marginTop: -3,
+                marginLeft: -3,
+              }}
+              initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
+              animate={{ x: tx, y: ty, scale: 0, opacity: 0 }}
+              exit={{}}
+              transition={{ duration: 0.55, ease: 'easeOut', delay: i * 0.02 }}
+            />
+          )
+        })}
+      </AnimatePresence>
+
+      {/* Flash overlay on claim */}
+      <AnimatePresence>
+        {burst && (
+          <motion.div
+            className="absolute inset-0 rounded-2xl pointer-events-none z-10"
+            style={{ backgroundColor: isPrem ? '#FBBF2440' : '#8B6FBB40' }}
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 0 }}
+            exit={{}}
+            transition={{ duration: 0.35 }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Crown badge для premium */}
       {isPrem && (
         <div className="absolute top-1.5 right-1.5 w-3.5 h-3.5 flex items-center justify-center">
@@ -48,7 +113,7 @@ export function RewardCard({ reward, levelRequired }: RewardCardProps) {
         </div>
       )}
 
-      {/* Иконка — тип-специфичный фон */}
+      {/* Иконка */}
       <div className={cn(
         'w-12 h-12 rounded-2xl flex items-center justify-center shrink-0',
         status === 'claimed'
@@ -99,7 +164,7 @@ export function RewardCard({ reward, levelRequired }: RewardCardProps) {
         </p>
       </div>
 
-      {/* Кнопка "Забрать" — CR-стиль: большая, яркая, chunky */}
+      {/* Кнопка "Забрать" */}
       {status === 'claimable' && (
         <motion.div
           initial={{ opacity: 0, y: 4 }}

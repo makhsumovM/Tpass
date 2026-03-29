@@ -3,19 +3,17 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
-import { Lock, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useTPassStore } from '@/store/tpassStore'
 
 const tabs = [
-  { href: '/track',     label: 'Дорожка',  premiumOnly: false },
-  { href: '/quests',    label: 'Квесты',   premiumOnly: false },
-  { href: '/ai-coach',  label: 'AI Коуч',  premiumOnly: true  },
+  { href: '/track',  label: 'Дорожка', premiumOnly: false },
+  { href: '/quests', label: 'Квесты',  premiumOnly: false },
 ]
 
 export function TabBar() {
   const pathname = usePathname()
-  const { questProgress, quests, isPremium, openPremiumModal } = useTPassStore()
+  const { questProgress, quests, isPremium } = useTPassStore()
 
   const activeQuestCount = quests.filter((q) => {
     const isLocked    = q.track === 'premium' && !isPremium
@@ -26,27 +24,9 @@ export function TabBar() {
 
   return (
     <div className="relative flex border-b border-tcell-surface2">
-      {tabs.map(({ href, label, premiumOnly }) => {
-        const active   = pathname.startsWith(href)
-        const isQuest  = href === '/quests'
-        const isLocked = premiumOnly && !isPremium
-        const isAi     = href === '/ai-coach'
-
-        if (isLocked) {
-          return (
-            <button
-              key={href}
-              onClick={openPremiumModal}
-              className={cn(
-                'relative flex-1 flex items-center justify-center gap-1.5 py-3 text-sm font-semibold transition-colors',
-                'text-tcell-muted',
-              )}
-            >
-              {label}
-              <Lock size={11} className="text-tcell-muted/60" />
-            </button>
-          )
-        }
+      {tabs.map(({ href, label }) => {
+        const active  = pathname.startsWith(href)
+        const isQuest = href === '/quests'
 
         return (
           <Link
@@ -57,9 +37,6 @@ export function TabBar() {
               active ? 'text-tcell-accent-light' : 'text-tcell-muted',
             )}
           >
-            {isAi && active && (
-              <Sparkles size={13} className="text-tcell-accent-light" />
-            )}
             {label}
 
             {/* Active quests badge */}
