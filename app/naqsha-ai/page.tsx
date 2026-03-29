@@ -1,6 +1,6 @@
 'use client'
 
-import { Sparkles, Sun, Moon } from 'lucide-react'
+import { Sparkles, Sun, Moon, BellRing } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { AiCoachGate } from '@/components/ai-coach/AiCoachGate'
 import { AiCoachTabs } from '@/components/ai-coach/AiCoachTabs'
@@ -10,6 +10,14 @@ import { GoalsView } from '@/components/ai-coach/GoalsView'
 import { NotificationBanner } from '@/components/ai-coach/NotificationBanner'
 import { useAiCoachStore } from '@/store/aiCoachStore'
 import { useTPassStore } from '@/store/tpassStore'
+
+function sendNativeNotification(title: string, body: string) {
+  if (typeof window !== 'undefined' && (window as any).ReactNativeWebView) {
+    (window as any).ReactNativeWebView.postMessage(
+      JSON.stringify({ type: 'notification', title, body })
+    )
+  }
+}
 
 export default function NaqshaAiPage() {
   const { activeTab } = useAiCoachStore()
@@ -30,12 +38,21 @@ export default function NaqshaAiPage() {
                 <p className="text-[11px] text-tcell-muted">Персональный планировщик</p>
               </div>
             </div>
-            <button
-              onClick={toggleTheme}
-              className="w-8 h-8 rounded-full bg-tcell-surface border border-tcell-surface2 flex items-center justify-center text-tcell-muted transition-colors"
-            >
-              {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => sendNativeNotification('Naqsha AI', 'Уведомления работают! 🎉')}
+                className="w-8 h-8 rounded-full bg-tcell-surface border border-tcell-surface2 flex items-center justify-center text-tcell-muted transition-colors"
+                title="Тест уведомления"
+              >
+                <BellRing size={14} />
+              </button>
+              <button
+                onClick={toggleTheme}
+                className="w-8 h-8 rounded-full bg-tcell-surface border border-tcell-surface2 flex items-center justify-center text-tcell-muted transition-colors"
+              >
+                {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+              </button>
+            </div>
           </div>
 
           <NotificationBanner />
