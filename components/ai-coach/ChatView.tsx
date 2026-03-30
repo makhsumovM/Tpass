@@ -4,11 +4,80 @@ import { useState, useRef, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { Send, Bot, Sparkles, PenLine, CheckCircle2, Circle } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { useAiCoachStore } from '@/store/aiCoachStore'
+import { useAiCoachStore, DURATION_OPTIONS } from '@/store/aiCoachStore'
 import { useTPassStore } from '@/store/tpassStore'
 import { VoiceInputButton } from './VoiceInputButton'
 import { DiscoveryWizard } from './DiscoveryWizard'
 import type { CoachPlan, GeminiScheduleResponse, ScheduledTask, WeekGroup } from '@/types/aiCoach'
+
+// ── Streaming helpers ─────────────────────────────────────────────────────────
+
+async function readStream(response: Response): Promise<string> {
+  const reader = response.body!.getReader()
+  const decoder = new TextDecoder()
+  let accumulated = ''
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    accumulated += decoder.decode(value, { stream: true })
+  }
+  return accumulated
+}
+
+function stripFences(text: string): string {
+  return text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
+}
+
+const STREAMING_PHASES = [
+  'Анализирую цель...',
+  'Составляю расписание...',
+  'Подбираю задачи...',
+  'Почти готово...',
+]
+
+// ── Streaming indicator ───────────────────────────────────────────────────────
+
+function StreamingIndicator({ phase }: { phase: number }) {
+  return (
+    <motion.div
+      key="streaming"
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -8 }}
+      className="flex gap-2"
+    >
+      <div className="relative w-8 h-8 rounded-full flex items-center justify-center bg-tcell-accent/20 border border-tcell-accent/30 shrink-0 mt-0.5">
+        <Bot size={15} className="text-tcell-accent-light" />
+        <motion.div
+          className="absolute inset-0 rounded-full border border-tcell-accent/40"
+          animate={{ scale: [1, 1.5, 1], opacity: [0.6, 0, 0.6] }}
+          transition={{ duration: 1.8, repeat: Infinity }}
+        />
+      </div>
+      <div className="bg-tcell-surface rounded-2xl rounded-tl-sm px-4 py-3 flex flex-col gap-2 min-w-[160px]">
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={phase}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.3 }}
+            className="text-xs text-tcell-muted"
+          >
+            {STREAMING_PHASES[phase]}
+          </motion.p>
+        </AnimatePresence>
+        <div className="h-0.5 rounded-full bg-tcell-surface2 overflow-hidden">
+          <motion.div
+            className="h-full bg-tcell-accent/60 rounded-full"
+            animate={{ x: ['-100%', '200%'] }}
+            transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+          />
+        </div>
+      </div>
+    </motion.div>
+  )
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -75,12 +144,16 @@ export function ChatView() {
     clearConversation,
     setGoalType,
     setOnboarded,
+    selectedDuration,
+    setDuration,
   } = useAiCoachStore()
   const { addXp } = useTPassStore()
 
   const [input, setInput] = useState('')
+  const [streamPhase, setStreamPhase] = useState(0)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const phaseTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const isDiscovery = selectedGoalType === 'discovery'
 
   const todayTasks = useMemo(() => {
@@ -111,6 +184,20 @@ export function ChatView() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isLoading])
 
+  const startPhaseTimer = () => {
+    setStreamPhase(0)
+    phaseTimerRef.current = setInterval(() => {
+      setStreamPhase((p) => Math.min(p + 1, STREAMING_PHASES.length - 1))
+    }, 1800)
+  }
+
+  const stopPhaseTimer = () => {
+    if (phaseTimerRef.current) {
+      clearInterval(phaseTimerRef.current)
+      phaseTimerRef.current = null
+    }
+  }
+
   const send = async (text: string) => {
     const trimmed = text.trim()
     if (!trimmed || isLoading) return
@@ -118,7 +205,7 @@ export function ChatView() {
     setError(null)
     addMessage({ role: 'user', content: trimmed })
     setLoading(true)
-
+    startPhaseTimer()
     setOnboarded()
 
     try {
@@ -129,14 +216,23 @@ export function ChatView() {
           goalText: trimmed,
           goalType: selectedGoalType,
           currentDate: new Date().toISOString().split('T')[0],
+          requestedWeeks: selectedDuration.weeks,
+          requestedDays: selectedDuration.days,
+          auto: selectedDuration.auto ?? false,
           activePlanContext: activePlan
             ? `User has an active plan: "${activePlan.goalText}" (${activePlan.durationWeeks} weeks, ${activePlan.goalType})`
             : null,
         }),
       })
-      if (!res.ok) throw new Error('Ошибка сервера. Попробуй ещё раз.')
-      const data = await res.json()
-      const plan = buildPlanFromResponse(trimmed, selectedGoalType as CoachPlan['goalType'], data.plan)
+      if (!res.ok || !res.body) throw new Error('Ошибка сервера. Попробуй ещё раз.')
+
+      const raw = await readStream(res)
+      const cleaned = stripFences(raw)
+      const parsed = JSON.parse(cleaned) as { plan?: GeminiScheduleResponse } | GeminiScheduleResponse
+
+      // Support both wrapped {plan: ...} and unwrapped response shapes
+      const planData = ('plan' in parsed && parsed.plan) ? parsed.plan : parsed as GeminiScheduleResponse
+      const plan = buildPlanFromResponse(trimmed, selectedGoalType as CoachPlan['goalType'], planData)
 
       setActivePlan(plan)
       addMessage({
@@ -149,6 +245,7 @@ export function ChatView() {
       setError(msg)
       addMessage({ role: 'assistant', content: `❌ ${msg}` })
     } finally {
+      stopPhaseTimer()
       setLoading(false)
     }
   }
@@ -338,36 +435,39 @@ export function ChatView() {
             </motion.div>
           ))}
 
-          {/* Loading dots */}
-          {isLoading && (
-            <motion.div
-              key="loading"
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              className="flex gap-2"
-            >
-              <div className="w-8 h-8 rounded-full flex items-center justify-center bg-tcell-accent/20 border border-tcell-accent/30 shrink-0">
-                <Bot size={15} className="text-tcell-accent-light" />
-              </div>
-              <div className="bg-tcell-surface rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-1.5">
-                {[0, 0.15, 0.3].map((delay, i) => (
-                  <motion.span
-                    key={i}
-                    className="w-2 h-2 rounded-full bg-tcell-accent/60"
-                    animate={{ scale: [1, 1.4, 1], opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 0.9, repeat: Infinity, delay }}
-                  />
-                ))}
-              </div>
-            </motion.div>
-          )}
+          {/* Streaming indicator */}
+          {isLoading && <StreamingIndicator phase={streamPhase} />}
         </AnimatePresence>
         <div ref={bottomRef} />
       </div>
 
+      {/* Duration picker */}
+      <div className="px-4 pt-2 pb-1 flex items-center gap-2">
+        <span className="text-[11px] text-tcell-muted shrink-0">На сколько:</span>
+        <div className="flex gap-1.5 overflow-x-auto scrollbar-none">
+          {DURATION_OPTIONS.map((opt) => {
+            const active = opt.label === selectedDuration.label
+            return (
+              <motion.button
+                key={opt.label}
+                onClick={() => setDuration(opt)}
+                whileTap={{ scale: 0.94 }}
+                className={cn(
+                  'shrink-0 px-3 py-1 rounded-full text-[11px] font-medium border transition-colors',
+                  active
+                    ? 'bg-tcell-accent/20 border-tcell-accent/50 text-tcell-accent-light'
+                    : 'bg-tcell-surface border-tcell-surface2 text-tcell-muted',
+                )}
+              >
+                {opt.label}
+              </motion.button>
+            )
+          })}
+        </div>
+      </div>
+
       {/* Input bar */}
-      <div className="px-4 pb-4 pt-2 flex items-end gap-2">
+      <div className="px-4 pb-4 pt-1 flex items-end gap-2">
         <VoiceInputButton
           disabled={isLoading}
           onTranscript={(text) => setInput((prev) => prev ? `${prev} ${text}` : text)}

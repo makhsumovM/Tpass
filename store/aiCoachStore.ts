@@ -2,6 +2,21 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { ChatMessage, CoachPlan, DiscoveryPhase, DiscoveryQuestion, GoalType, ReminderToast } from '@/types/aiCoach'
 
+export interface DurationOption {
+  label: string
+  weeks: number
+  days?: number    // if set — tell AI to generate only this many days
+  auto?: boolean   // if true — let AI decide freely, no duration constraint
+}
+
+export const DURATION_OPTIONS: DurationOption[] = [
+  { label: 'AI сам', weeks: 0, auto: true },
+  { label: '3 дня',  weeks: 1, days: 3 },
+  { label: '1 нед',  weeks: 1 },
+  { label: '2 нед',  weeks: 2 },
+  { label: '1 мес',  weeks: 4 },
+]
+
 interface AiCoachState {
   // Conversation
   messages: ChatMessage[]
@@ -15,6 +30,7 @@ interface AiCoachState {
   // UI state
   activeTab: 'chat' | 'goals' | 'calendar'
   selectedGoalType: GoalType | 'discovery'
+  selectedDuration: DurationOption
 
   // Discovery mode
   discoveryPhase: DiscoveryPhase
@@ -41,6 +57,7 @@ interface AiCoachState {
   updateTaskTime: (planId: string, taskId: string, time: string) => void
   setActiveTab: (tab: 'chat' | 'goals' | 'calendar') => void
   setGoalType: (t: GoalType | 'discovery') => void
+  setDuration: (d: DurationOption) => void
   setOnboarded: () => void
   setDiscoveryPhase: (phase: DiscoveryPhase) => void
   setDiscoveryAnswers: (answers: string) => void
@@ -63,6 +80,7 @@ export const useAiCoachStore = create<AiCoachState>()(
       activeTab: 'chat',
       onboarded: false,
       selectedGoalType: 'fitness',
+      selectedDuration: DURATION_OPTIONS[0], // default: AI сам
       discoveryPhase: 'idle',
       discoveryAnswers: '',
       discoveryQuestions: [] as DiscoveryQuestion[],
@@ -156,6 +174,7 @@ export const useAiCoachStore = create<AiCoachState>()(
 
       setActiveTab: (tab) => set({ activeTab: tab }),
       setGoalType: (t) => set({ selectedGoalType: t }),
+      setDuration: (d) => set({ selectedDuration: d }),
       setDiscoveryPhase: (phase) => set({ discoveryPhase: phase }),
       setDiscoveryAnswers: (answers) => set({ discoveryAnswers: answers }),
       setDiscoveryQuestions: (questions) =>
@@ -209,6 +228,7 @@ export const useAiCoachStore = create<AiCoachState>()(
         savedPlans: state.savedPlans,
         activeTab: state.activeTab,
         selectedGoalType: state.selectedGoalType,
+        selectedDuration: state.selectedDuration,
         onboarded: state.onboarded,
         discoveryPhase: state.discoveryPhase,
         discoveryAnswers: state.discoveryAnswers,

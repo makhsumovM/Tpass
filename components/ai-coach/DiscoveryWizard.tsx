@@ -3,10 +3,29 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { ArrowLeft, ArrowRight, Check } from 'lucide-react'
-import { useAiCoachStore } from '@/store/aiCoachStore'
+import { useAiCoachStore, DURATION_OPTIONS } from '@/store/aiCoachStore'
+import { cn } from '@/lib/utils'
 import { VoiceInputButton } from './VoiceInputButton'
 import { DiscoverySuggestionCards } from './DiscoverySuggestionCards'
 import type { CoachPlan, DiscoveryQuestion, DiscoverySuggestion, GeminiScheduleResponse, ScheduledTask, WeekGroup } from '@/types/aiCoach'
+
+// ── Streaming helpers ─────────────────────────────────────────────────────────
+
+async function readStream(response: Response): Promise<string> {
+  const reader = response.body!.getReader()
+  const decoder = new TextDecoder()
+  let accumulated = ''
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    accumulated += decoder.decode(value, { stream: true })
+  }
+  return accumulated
+}
+
+function stripFences(text: string): string {
+  return text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -46,46 +65,118 @@ function weeksLabel(n: number) {
 
 // ── Screens ───────────────────────────────────────────────────────────────────
 
+const DISCOVER_PHASES = [
+  'Анализирую твои ответы...',
+  'Ищу подходящие занятия...',
+  'Подбираю варианты...',
+  'Почти готово...',
+]
+
 function LoadingScreen({ label }: { label: string }) {
+  const [phase, setPhase] = useState(0)
+
+  useEffect(() => {
+    const t = setInterval(() => setPhase((p) => Math.min(p + 1, DISCOVER_PHASES.length - 1)), 1600)
+    return () => clearInterval(t)
+  }, [])
+
   return (
-    <div className="flex flex-col items-center justify-center flex-1 gap-4 px-6 py-16">
-      <div className="flex gap-1.5">
-        {[0, 0.15, 0.3].map((delay, i) => (
-          <motion.div
-            key={i}
-            className="w-2 h-2 rounded-full bg-tcell-accent/60"
-            animate={{ opacity: [0.3, 1, 0.3], y: [0, -4, 0] }}
-            transition={{ duration: 0.9, repeat: Infinity, delay }}
-          />
-        ))}
+    <div className="flex flex-col items-center justify-center flex-1 gap-5 px-6 py-16">
+      {/* Pulsing ring */}
+      <div className="relative w-14 h-14 flex items-center justify-center">
+        <motion.div
+          className="absolute inset-0 rounded-full border-2 border-tcell-accent/40"
+          animate={{ scale: [1, 1.4, 1], opacity: [0.6, 0, 0.6] }}
+          transition={{ duration: 1.8, repeat: Infinity }}
+        />
+        <motion.div
+          className="absolute inset-0 rounded-full border-2 border-tcell-accent/20"
+          animate={{ scale: [1, 1.7, 1], opacity: [0.4, 0, 0.4] }}
+          transition={{ duration: 1.8, repeat: Infinity, delay: 0.4 }}
+        />
+        <span className="text-2xl">✨</span>
       </div>
-      <p className="text-sm text-tcell-muted text-center">{label}</p>
+
+      {/* Cycling phase text */}
+      <div className="flex flex-col items-center gap-1.5">
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={phase}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.3 }}
+            className="text-sm font-medium text-tcell-fg text-center"
+          >
+            {DISCOVER_PHASES[phase]}
+          </motion.p>
+        </AnimatePresence>
+        <p className="text-xs text-tcell-muted text-center">{label}</p>
+      </div>
+
+      {/* Shimmer bar */}
+      <div className="w-40 h-0.5 rounded-full bg-tcell-surface2 overflow-hidden">
+        <motion.div
+          className="h-full bg-linear-to-r from-tcell-accent/0 via-tcell-accent/70 to-tcell-accent/0 rounded-full"
+          animate={{ x: ['-100%', '200%'] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+        />
+      </div>
     </div>
   )
 }
 
+const PLAN_PHASES = [
+  'Составляю расписание...',
+  'Подбираю задачи...',
+  'Расставляю время...',
+  'Финальная обработка...',
+]
+
 function PlanCreatingScreen({ emoji, title }: { emoji: string; title: string }) {
+  const [phase, setPhase] = useState(0)
+
+  useEffect(() => {
+    const t = setInterval(() => setPhase((p) => Math.min(p + 1, PLAN_PHASES.length - 1)), 1800)
+    return () => clearInterval(t)
+  }, [])
+
   return (
     <div className="flex flex-col flex-1 px-4 py-5 gap-4">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-2xl bg-tcell-surface border border-tcell-surface2 flex items-center justify-center text-2xl shrink-0">
+        <div className="relative w-11 h-11 rounded-2xl bg-tcell-surface border border-tcell-surface2 flex items-center justify-center text-2xl shrink-0">
           {emoji}
+          <motion.div
+            className="absolute inset-0 rounded-2xl border border-tcell-accent/40"
+            animate={{ opacity: [0.4, 1, 0.4] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          />
         </div>
-        <div>
-          <p className="text-sm font-semibold text-tcell-fg leading-snug">{title}</p>
-          <div className="flex items-center gap-1 mt-1">
-            {[0, 0.15, 0.3].map((delay, i) => (
-              <motion.div
-                key={i}
-                className="w-1.5 h-1.5 rounded-full bg-tcell-accent/60"
-                animate={{ opacity: [0.3, 1, 0.3], y: [0, -3, 0] }}
-                transition={{ duration: 0.8, repeat: Infinity, delay }}
-              />
-            ))}
-            <span className="text-xs text-tcell-muted ml-1.5">Составляю план…</span>
-          </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-tcell-fg leading-snug truncate">{title}</p>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={phase}
+              initial={{ opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 6 }}
+              transition={{ duration: 0.25 }}
+              className="text-xs text-tcell-accent-light mt-0.5"
+            >
+              {PLAN_PHASES[phase]}
+            </motion.p>
+          </AnimatePresence>
         </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="h-0.5 rounded-full bg-tcell-surface2 overflow-hidden">
+        <motion.div
+          className="h-full bg-tcell-accent/60 rounded-full"
+          animate={{ x: ['-100%', '200%'] }}
+          transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
+        />
       </div>
 
       {/* Week label skeleton */}
@@ -156,6 +247,8 @@ export function DiscoveryWizard() {
     setGoalType,
     addMessage,
     resetDiscovery,
+    selectedDuration,
+    setDuration,
   } = useAiCoachStore()
 
   const [answer, setAnswer] = useState('')
@@ -210,12 +303,19 @@ export function DiscoveryWizard() {
           phase: 'suggest',
           questions: questionsText,
           answers: discoveryAnswers,
+          preferredWeeks: selectedDuration.weeks,
         }),
       })
-      if (!res.ok) throw new Error(`Ошибка сервера ${res.status}`)
-      const data = await res.json()
+      if (!res.ok || !res.body) throw new Error(`Ошибка сервера ${res.status}`)
+      const raw = await readStream(res)
+      const data = JSON.parse(stripFences(raw))
       setSuggestionIntro(data.intro ?? 'Вот что подходит тебе:')
-      setSuggestions(data.suggestions ?? [])
+      setSuggestions(
+        (data.suggestions ?? []).map((s: DiscoverySuggestion & { id?: string }) => ({
+          ...s,
+          id: s.id ?? crypto.randomUUID(),
+        })),
+      )
     } catch {
       setSuggestionIntro('Вот что я могу тебе предложить:')
       setSuggestions([])
@@ -259,11 +359,16 @@ export function DiscoveryWizard() {
           goalText,
           goalType: suggestion.goalType,
           currentDate: new Date().toISOString().split('T')[0],
+          requestedWeeks: selectedDuration.weeks,
+          requestedDays: selectedDuration.days,
+          auto: selectedDuration.auto ?? false,
         }),
       })
-      if (!res.ok) throw new Error('Ошибка сервера')
-      const data = await res.json()
-      const plan = buildPlan(goalText, suggestion.goalType, data.plan as GeminiScheduleResponse)
+      if (!res.ok || !res.body) throw new Error('Ошибка сервера')
+      const raw = await readStream(res)
+      const parsed = JSON.parse(stripFences(raw))
+      const planData = ('plan' in parsed && parsed.plan) ? parsed.plan : parsed
+      const plan = buildPlan(goalText, suggestion.goalType, planData as GeminiScheduleResponse)
 
       // Only now update store & navigate — component will unmount right after
       setGoalType(suggestion.goalType)
@@ -347,7 +452,27 @@ export function DiscoveryWizard() {
       <div className="pt-2 pb-5">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs text-tcell-muted">Вопрос {current + 1} из {total}</span>
-          <span className="text-xs text-tcell-muted">{Math.round(progress)}%</span>
+          {/* Duration mini-picker */}
+          <div className="flex gap-1">
+            {DURATION_OPTIONS.map((opt) => {
+              const active = opt.label === selectedDuration.label
+              return (
+                <motion.button
+                  key={opt.label}
+                  onClick={() => setDuration(opt)}
+                  whileTap={{ scale: 0.92 }}
+                  className={cn(
+                    'px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors',
+                    active
+                      ? 'bg-amber-400/20 border-amber-400/50 text-amber-400'
+                      : 'border-tcell-surface2 text-tcell-muted/60',
+                  )}
+                >
+                  {opt.label}
+                </motion.button>
+              )
+            })}
+          </div>
         </div>
         {/* Bar */}
         <div className="h-1.5 bg-white/8 rounded-full overflow-hidden">

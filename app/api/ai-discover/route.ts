@@ -1,6 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { NextRequest, NextResponse } from 'next/server'
-import { z } from 'zod'
+import { NextRequest } from 'next/server'
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? '')
 
@@ -12,26 +11,12 @@ function getModel() {
   })
 }
 
-// ── Generate suggestions based on answers ─────────────────────────────────
-const SuggestionItemSchema = z.object({
-  emoji: z.string(),
-  title: z.string(),
-  description: z.string().max(250),
-  goalType: z.enum(['fitness', 'habit', 'meeting', 'self-improvement']),
-  durationWeeks: z.number().int().min(2).max(12),
-})
+function buildSuggestPrompt(questions: string, preferredWeeks?: number): string {
+  const durationHint = preferredWeeks
+    ? `The user prefers a plan of approximately ${preferredWeeks} week(s). Set durationWeeks in each suggestion accordingly (stay close to this number).`
+    : 'Set durationWeeks between 4 and 12 based on what makes sense for the activity.'
 
-const SuggestionsSchema = z.object({
-  intro: z.string(),
-  suggestions: z.array(SuggestionItemSchema).min(2).max(4),
-})
-
-async function getSuggestions(
-  questions: string,
-  answers: string,
-): Promise<z.infer<typeof SuggestionsSchema>> {
-  const model = getModel()
-  const prompt = `You are a creative personal coach. A user answered 5 lifestyle questions. Based on their EXACT combination of answers, suggest 3 activities that will genuinely excite them.
+  return `You are a creative personal coach. A user answered 5 lifestyle questions. Based on their EXACT combination of answers, suggest 3 activities that will genuinely excite them.
 
 User's profile (question → answer):
 ${questions}
@@ -43,6 +28,7 @@ STRICT RULES — violating any rule = bad response:
 4. Vary the goalType across suggestions (don't use the same goalType twice)
 5. Be creative and specific — not "занятие спортом" but "бокс для начинающих" or "утренний бег в парке"
 6. If user answered "Удиви меня! ✨" for the last question, give at least one truly unexpected suggestion they wouldn't think of themselves
+7. ${durationHint}
 
 Return ONLY this JSON (no markdown, no extra text):
 {
@@ -53,26 +39,20 @@ Return ONLY this JSON (no markdown, no extra text):
       "title": "specific activity name in Russian (3-6 words)",
       "description": "why this fits THEIR specific answers, 1-2 sentences in Russian",
       "goalType": "fitness" | "habit" | "meeting" | "self-improvement",
-      "durationWeeks": <4-12>
+      "durationWeeks": <number>
     }
   ]
 }
 
 Generate exactly 3 suggestions in the array.`
-
-  const result = await model.generateContent(prompt)
-  const raw = stripFences(result.response.text())
-  return SuggestionsSchema.parse(JSON.parse(raw))
 }
 
-function stripFences(text: string): string {
-  return text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim()
-}
-
-// ── Route handler ──────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   if (!process.env.GEMINI_API_KEY) {
-    return NextResponse.json({ error: 'GEMINI_API_KEY not configured' }, { status: 500 })
+    return new Response(JSON.stringify({ error: 'GEMINI_API_KEY not configured' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
 
   try {
@@ -81,19 +61,47 @@ export async function POST(req: NextRequest) {
 
     if (phase === 'suggest') {
       const { questions, answers } = body
-      if (!answers) return NextResponse.json({ error: 'answers required' }, { status: 400 })
-      const data = await getSuggestions(questions ?? '', answers)
-      // Attach stable IDs
-      const withIds = {
-        ...data,
-        suggestions: data.suggestions.map((s) => ({ ...s, id: crypto.randomUUID() })),
+      if (!answers) {
+        return new Response(JSON.stringify({ error: 'answers required' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        })
       }
-      return NextResponse.json(withIds)
+
+      const questionsText = questions ?? answers
+      const preferredWeeks = typeof body.preferredWeeks === 'number' ? body.preferredWeeks : undefined
+      const model = getModel()
+      const result = await model.generateContentStream(buildSuggestPrompt(questionsText, preferredWeeks))
+
+      const encoder = new TextEncoder()
+      const stream = new ReadableStream({
+        async start(controller) {
+          try {
+            for await (const chunk of result.stream) {
+              const text = chunk.text()
+              if (text) controller.enqueue(encoder.encode(text))
+            }
+            controller.close()
+          } catch (e) {
+            controller.error(e)
+          }
+        },
+      })
+
+      return new Response(stream, {
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+      })
     }
 
-    return NextResponse.json({ error: 'unknown phase' }, { status: 400 })
+    return new Response(JSON.stringify({ error: 'unknown phase' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown error'
-    return NextResponse.json({ error: 'api_error', message }, { status: 502 })
+    return new Response(JSON.stringify({ error: 'api_error', message }), {
+      status: 502,
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
 }
